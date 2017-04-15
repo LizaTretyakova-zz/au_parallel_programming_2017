@@ -5,7 +5,7 @@ project(matrix_conv)
 find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 link_directories(${OpenCL_LIBRARY})
-add_executable (matrix_conv main.cpp matrix_conv.cl)
+add_executable (matrix_conv main.cpp matrix_convolution.cl)
 target_link_libraries (matrix_conv ${OpenCL_LIBRARY})
 
 # copy cl files to binary folder

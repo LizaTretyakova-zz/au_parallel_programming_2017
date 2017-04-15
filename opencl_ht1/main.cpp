@@ -4,9 +4,11 @@
 
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <iomanip>
 #include <iterator>
+#include <string>
 
 int main()
 {
@@ -31,10 +33,12 @@ int main()
       int m;
       std::vector<float> a;
       std::vector<float> b;
+      std::vector<float> c;
       std::ifstream in("input.txt");
       in >> n >> m;
       a.resize(n * n);
       b.resize(m * m);
+      c.resize(n * n, 0);
       for(int i = 0; i < n; ++i) {
           for(int j = 0; j < n; ++j) {
               in >> a[i * n + j];
@@ -58,26 +62,14 @@ int main()
       cl::Program program(context, source);
 
       // compile opencl source
-	  size_t const block_size = 16;
-      program.build(devices, "-D BLOCK_SIZE=16");
-
-//      // create a message to send to kernel
-//      size_t const N = 256;
-//      size_t const matrix_size = N * N;
-
-//      int a[matrix_size];
-//      int b[matrix_size];
-//      int c[matrix_size];
-//      for (size_t i = 0; i < N; ++i)
-//      {
-//         for (size_t j = 0; j < N; ++j)
-//         {
-//            size_t idx = i * N + j;
-//            a[idx] = rand() % 10;
-//            b[idx] = rand() % 10;
-//            c[idx] = 0;
-//         }
-//      }
+      size_t block_size = 16;
+      while(block_size > n || n % block_size != 0) {
+	  block_size /= 2;
+      }
+      std::stringstream ss;
+      ss << block_size;
+      std::string arg =  "-D BLOCK_SIZE=" + ss.str();
+      program.build(devices, arg.data());
 
       // allocate device buffer to hold message
       cl::Buffer dev_a(context, CL_MEM_READ_ONLY,  sizeof(float) * n * n);
@@ -90,15 +82,11 @@ int main()
 
       // load named kernel from opencl source
       cl::Kernel kernel(program, "matrix_conv");
-      cl::KernelFunctor matrix_mult(kernel, queue, cl::NullRange, cl::NDRange(n, n), cl::NDRange(block_size, block_size));
-      matrix_mult(dev_a, dev_b, dev_c, n);
+      
+      cl::KernelFunctor matrix_conv(kernel, queue, cl::NullRange, cl::NDRange(n, n), cl::NDRange(block_size, block_size));
+      matrix_conv(dev_a, dev_b, dev_c, n, m);
 
-//      cl::Kernel kernel_shared(program, "matrix_mult_shared");
-//      cl::KernelFunctor matrix_mult_shared(kernel_shared, queue, cl::NullRange,
-//		                                   cl::NDRange(N, N), cl::NDRange(block_size, block_size));
-	  //matrix_mult_shared(dev_a, dev_b, dev_c, (int)N);
-
-      queue.enqueueReadBuffer(dev_c, CL_TRUE, 0, sizeof(float) * n * n, c);
+      queue.enqueueReadBuffer(dev_c, CL_TRUE, 0, sizeof(float) * n * n, c.data());
 
       for (size_t i = 0; i < n; ++i)
       {
@@ -110,23 +98,6 @@ int main()
          out << std::endl;
       }
       out << std::endl;
-
-//      for (size_t i = 0; i < N; ++i)
-//      {
-//         for (size_t j = 0; j < N; ++j)
-//         {
-//            size_t idx = i * N + j;
-
-//            int sum = 0;
-//            for (int k = 0; k < N; ++k)
-//               sum += a[i * N + k] * b[k * N + j];
-//			if (c[idx] != sum)
-//				std::cout << i << " " << j << std::endl;
-//            //std::cout << c[idx] - sum << " ";
-//         }
-//         //std::cout << std::endl;
-//      }
-//      std::cout << "finished" << std::endl;
    }
    catch (cl::Error e)
    {

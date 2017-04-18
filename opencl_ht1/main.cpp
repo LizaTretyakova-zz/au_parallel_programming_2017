@@ -94,6 +94,30 @@ int main()
 
       queue.enqueueReadBuffer(dev_c, CL_TRUE, 0, sizeof(float) * n * n, c.data());
 
+/*
+      for (size_t i = 0; i < n; ++i)
+      {
+         for (size_t j = 0; j < n; ++j)
+         {
+            size_t idx = i * n + j;
+            std::cerr << a[idx] << " ";
+         }
+         std::cerr << std::endl;
+      }
+      std::cerr << std::endl;
+
+      std::cerr << m << std::endl;
+      for (size_t i = 0; i < m; ++i)
+      {
+         for (size_t j = 0; j < m; ++j)
+         {
+            size_t idx = i * m + j;
+            std::cerr << b[idx] << " ";
+         }
+         std::cerr << std::endl;
+      }
+      std::cerr << std::endl;
+*/
       for (size_t i = 0; i < n; ++i)
       {
          for (size_t j = 0; j < n; ++j)
@@ -104,6 +128,27 @@ int main()
          out << std::endl;
       }
       out << std::endl;
+/*
+      int hm = (m - 1) / 2;
+      for(int row = 0; row < n; ++row) {
+	  for(int col = 0; col < n; ++col) { 
+   	      float sum = 0;
+              for(int k = -hm; k <= hm; ++k) {
+        	  for(int l = -hm; l <= hm; ++l) {
+            	      if(row + k >= 0 && row + k < n
+                	&& col + l >= 0 && col + l < n) {
+                          sum += a[(row + k) * n + (col + l)]
+                                  * b[(k + hm) * m + (l + hm)];
+		      }
+                  }
+              }
+   	      c[row * n + col] = sum;
+	      std::cerr << c[row * n + col] << " ";
+          }
+          std::cerr << std::endl;
+      }
+      std::cerr << std::endl;
+*/
    }
    catch (cl::Error e)
    {

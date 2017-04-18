@@ -1,4 +1,4 @@
-__kernel void matrix_conv(__global int * a, __global int * b, __global int * c, int n, int m)
+__kernel void matrix_conv(__global float * a, __global float * b, __global float * c, int n, int m)
 {
    int row = get_global_id(0);
    int col = get_global_id(1);
@@ -7,14 +7,14 @@ __kernel void matrix_conv(__global int * a, __global int * b, __global int * c, 
       return;
 
    int hm = (m - 1) / 2;
-   int sum = 0;
+   float sum = 0;
 
     for(int k = -hm; k <= hm; ++k) {
         for(int l = -hm; l <= hm; ++l) {
             if(row + k >= 0 && row + k < n
                 && col + l >= 0 && col + l < n) {
                 sum += a[(row + k) * n + (col + l)]
-                        * b[(k + hm) * n + (l + hm)];
+                        * b[(k + hm) * m + (l + hm)];
             }
         }
     }

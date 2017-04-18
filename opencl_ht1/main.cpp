@@ -31,11 +31,16 @@ int main()
       // load input data
       int n;
       int m;
+      int N;
+      size_t block_size = 16;
       std::vector<float> a;
       std::vector<float> b;
       std::vector<float> c;
       std::ifstream in("input.txt");
+
       in >> n >> m;
+      N = n - n % block_size + block_size;
+
       a.resize(n * n);
       b.resize(m * m);
       c.resize(n * n, 0);
@@ -62,13 +67,14 @@ int main()
       cl::Program program(context, source);
 
       // compile opencl source
-      size_t block_size = 16;
-      while(block_size > n || n % block_size != 0) {
-	  block_size /= 2;
-      }
-      std::stringstream ss;
-      ss << block_size;
-      std::string arg =  "-D BLOCK_SIZE=" + ss.str();
+//      size_t block_size = 16;
+      std::string arg = "-D BLOCK_SIZE=16";
+//      while(block_size > n || n % block_size != 0) {
+//    	  block_size /= 2;
+//      }
+//      std::stringstream ss;
+//      ss << block_size;
+//      std::string arg =  "-D BLOCK_SIZE=" + ss.str();
       program.build(devices, arg.data());
 
       // allocate device buffer to hold message
@@ -83,7 +89,7 @@ int main()
       // load named kernel from opencl source
       cl::Kernel kernel(program, "matrix_conv");
       
-      cl::KernelFunctor matrix_conv(kernel, queue, cl::NullRange, cl::NDRange(n, n), cl::NDRange(block_size, block_size));
+      cl::KernelFunctor matrix_conv(kernel, queue, cl::NullRange, cl::NDRange(N, N), cl::NDRange(block_size, block_size));
       matrix_conv(dev_a, dev_b, dev_c, n, m);
 
       queue.enqueueReadBuffer(dev_c, CL_TRUE, 0, sizeof(float) * n * n, c.data());

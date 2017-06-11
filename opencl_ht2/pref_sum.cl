@@ -1,6 +1,6 @@
 #define SWAP(a,b) {__local int * tmp=a; a=b; b=tmp;}
 
-__kernel void scan_hillis_steele(__global float * input, __local float * a, __local float * b, uint shift, uint n)
+__kernel void scan_hillis_steele(__global float * input, __local float * a, __local float * b, int shift, int n)
 {
     uint gid = get_global_id(0);
     uint idx = gid * shift + shift - 1;
@@ -38,7 +38,7 @@ __kernel void scan_hillis_steele(__global float * input, __local float * a, __lo
     }
 }
 // TODO: int --> float !!!
-__kernel void propagate(__global float * input, uint shift, uint n) {
+__kernel void propagate(__global float * input, int shift, int n) {
     uint gid = get_global_id(0);
     uint idx = gid * shift + shift - 1;
     uint next_shift = shift * shift;

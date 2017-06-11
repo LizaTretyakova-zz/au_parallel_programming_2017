@@ -41,7 +41,7 @@ int main()
 
       // create a message to send to kernel
       size_t const block_size = 256;
-      size_t const N;
+      int N;
       std::cin >> N;
 
       size_t input_size = N - N % block_size + block_size;
@@ -54,7 +54,7 @@ int main()
       cl::Buffer dev_input (context, CL_MEM_READ_WRITE, sizeof(float) * input_size);
 
       // copy from cpu to gpu
-      queue.enqueueWriteBuffer(dev_input, CL_TRUE, 0, sizeof(int) * input_size, &input[0]);
+      queue.enqueueWriteBuffer(dev_input, CL_TRUE, 0, sizeof(float) * input_size, &input[0]);
       queue.finish();
 
       // load named kernel from opencl source
@@ -64,13 +64,14 @@ int main()
       cl::Kernel kernel_pr(program, "propagate");
       cl::KernelFunctor back_pr(kernel_pr, queue, cl::NullRange, cl::NDRange(input_size), cl::NDRange(block_size));
 
-      uint shift = 1;
+      int shift = 1;
       for(; shift < (uint)N; shift *= block_size) {
-          cl::Event event = scan_hs(dev_input, cl::__local(sizeof(float) * block_size), cl::__local(sizeof(int) * block_size), shift, N);
+          cl::Event event = scan_hs(dev_input, cl::__local(sizeof(float) * block_size), cl::__local(sizeof(float) * block_size), shift, N);
           event.wait();
       }
       shift /= (block_size * block_size);
       for(; shift > 1; shift /= block_size) {
+	  std::cerr << "started shift " << shift << std::endl;
           cl::Event event = back_pr(dev_input, cl::__local(sizeof(float) * block_size), shift, N);
           event.wait();
       }
@@ -79,7 +80,7 @@ int main()
 //      cl_ulong end_time   = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
 //      cl_ulong elapsed_time = end_time - start_time;
 
-      queue.enqueueReadBuffer(dev_input, CL_TRUE, 0, sizeof(int) * input_size, &input[0]);
+      queue.enqueueReadBuffer(dev_input, CL_TRUE, 0, sizeof(float) * input_size, &input[0]);
       for(int i = 0; i < N; ++i) {
           std::cout << std::fixed << std::setprecision(3) << input[i] << " ";
       }
